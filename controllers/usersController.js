@@ -2,6 +2,8 @@ const User = require("../mongoDB/models/Users");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 
+const saltRounds = 10;
+
 // Get all users
 const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find().select("-password").lean();
@@ -31,7 +33,8 @@ const createNewUser = asyncHandler(async (req, res) => {
     }
 
     // hash the password
-    const hashedPwd = await bcrypt.hash(password, 10);
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPwd = await bcrypt.hash(password, salt);
 
     const userObj = { username, email, password: hashedPwd };
 
@@ -44,4 +47,26 @@ const createNewUser = asyncHandler(async (req, res) => {
     res.status(201).json({ message: `New user ${username} created` });
 });
 
-module.exports = { getAllUsers, createNewUser };
+// user login
+const userLogin = asyncHandler(async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({
+            message: "All fields are required",
+        });
+    }
+
+    // find user by name
+    const user = await User.findOne({ username }).lean().exec();
+
+    if (!user) {
+        return res.status(400).json({ message: "No users found with this username" });
+    }
+
+    const result1 = await bcrypt.compare(password, user.password);
+
+    result1 ? res.status(200).json({ message: `Verified` }) : res.status(400).json({ message: "Wrong Password" });
+});
+
+module.exports = { getAllUsers, createNewUser, userLogin };
