@@ -66,7 +66,9 @@ const userLogin = asyncHandler(async (req, res) => {
 
     const result1 = await bcrypt.compare(password, user.password);
 
-    result1 ? res.status(200).json({ message: `Verified` }) : res.status(400).json({ message: "Wrong Password" });
+    result1
+        ? res.status(200).json({ message: `Verified`, user: user })
+        : res.status(400).json({ message: "Wrong Password" });
 });
 
 module.exports = { getAllUsers, createNewUser, userLogin };

@@ -15,6 +15,7 @@ const getAllBlogs = asyncHandler(async (req, res) => {
     const blogWithUser = await Promise.all(
         blogPosts.map(async (blog) => {
             const user = await User.findById(blog.user).lean().exec();
+            console.log(user);
             return { ...blog, username: user.username };
         })
     );
